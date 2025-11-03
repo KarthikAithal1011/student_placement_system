@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Section Selection</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/vendor/sweetalert2/sweetalert2.min.css">
+    <link rel="stylesheet" href="/css/custom.css?v=1.3">
+    <link rel="stylesheet" href="/animations.css">
+</head>
+
+<body class="login-page">
+    <div class="centered-container">
+        <div class="card tall-card sections-card animated fadeIn">
+            <div class="card-header bg-primary text-white text-center animated slideInLeft">
+                <h1 class="mb-0 animated bounceIn"><i class="fas fa-th-list me-2"></i>Select a Section</h1>
+            </div>
+            <div class="card-body">
+                <ul class="list-group">
+                    <%
+                    let firstUnattemptedFound = false;
+                    sections.forEach(function(section, index) {
+                        const isAttempted = attemptedSections[section.type];
+                        const canAttempt = !isAttempted && !firstUnattemptedFound;
+                        if (canAttempt) {
+                            firstUnattemptedFound = true;
+                        }
+                    %>
+                    <li class="list-group-item d-flex justify-content-between align-items-center animated fadeInUp">
+                        <div>
+                            <h3 class="mb-1"><%= section.name %></h3>
+                            <small class="<%= isAttempted ? 'text-success' : 'text-muted' %>">
+                                <i class="<%= isAttempted ? 'fas fa-check-circle' : 'far fa-circle' %> me-2"></i>
+                                <%= isAttempted ? 'Attempted' : 'Available' %>
+                            </small>
+                        </div>
+                        <button class="btn <%= canAttempt ? 'btn-primary animated pulse' : (isAttempted ? 'btn-success animated glow' : 'btn-secondary') %>"
+                            <%= !canAttempt ? 'disabled' : '' %>
+                            onclick="window.location.href='/attempt-section?type=<%= section.type %>'">
+                            <i class="<%= isAttempted ? 'fas fa-check' : 'fas fa-arrow-right' %> me-2"></i>
+                            <%= isAttempted ? 'Completed' : 'Attempt' %>
+                        </button>
+                    </li>
+                    <% }) %>
+                </ul>
+                <% if (Object.keys(attemptedSections).length === 5) { %>
+                <div class="text-center mt-4 animated fadeInUp">
+                    <a href="/results" class="btn btn-success btn-lg animated tada text-decoration-none"><i class="fas fa-poll me-2"></i>View Results</a>
+                </div>
+                <% } %>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

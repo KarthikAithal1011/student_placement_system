@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View Previous Results</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/vendor/sweetalert2/sweetalert2.min.css">
+    <link rel="stylesheet" href="/css/custom.css?v=1.3">
+    <link rel="stylesheet" href="/animations.css">
+</head>
+<body class="login-page">
+    <div class="container">
+        <div class="row justify-content-center align-items-center min-vh-100">
+            <div class="col-md-6 col-lg-4">
+                <div class="card login-card shadow-lg animated fadeIn">
+                    <div class="card-body">
+                        <div class="text-center mb-4 animated fadeInUp">
+                            <i class="fas fa-poll fa-3x text-primary animated bounceIn"></i>
+                            <h1 class="h3 mb-3 font-weight-normal animated slideInLeft">View Previous Results</h1>
+                        </div>
+                        <form id="resultsForm" action="/student/results" method="POST">
+                            <div class="mb-3 animated fadeInUp">
+                                <label for="roll_number_results" class="form-label">Roll Number</label>
+                            </div>
+                            <div class="mb-4 animated fadeInUp">
+                                <input type="text" class="form-control form-control-lg" id="roll_number_results" name="roll_number" required
+                                    pattern="\d{3}" placeholder="Enter your 3-digit roll number" style="height: 50px; border-radius: 10px; width: 100%;">
+                            </div>
+
+                            <div class="text-center">
+                                <button type="submit" class="btn btn-primary btn-lg animated pulse">View Results</button>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="card-footer text-center animated slideInRight">
+                        <a href="/" class="btn btn-success mt-3">Back to Login</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

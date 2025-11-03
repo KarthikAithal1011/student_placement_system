@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz - <%= sectionType.replace('_questions', '') %></title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/vendor/sweetalert2/sweetalert2.min.css">
+    <link rel="stylesheet" href="/css/custom.css?v=1.3">
+    <link rel="stylesheet" href="/animations.css">
+</head>
+
+<body oncontextmenu="return false;" class="quiz-page">
+    <div class="container my-5">
+        <div class="card shadow-lg quiz-card animated fadeIn">
+            <div class="card-header bg-primary text-white animated slideInLeft">
+                <h1 class="text-center mb-0 animated bounceIn"><i class="fas fa-feather-alt me-2"></i><%= sectionType.replace('_questions', '') %> Quiz</h1>
+            </div>
+            <div class="card-body">
+                <div id="timer" class="timer text-center fs-4 fw-bold my-3 text-primary animated pulse"></div>
+                <div id="warning" class="alert alert-warning text-center mt-3 d-none animated tada">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Warning: Do not switch tabs or leave the quiz.
+                </div>
+
+                <form id="quizForm" action="/submit-section" method="POST" class="p-3">
+                    <input type="hidden" id="answersHidden" name="answersHidden">
+                    <input type="hidden" id="autoSubmit" name="autoSubmit" value="false">
+
+                    <% if (questions && questions.length > 0) { %>
+                    <% questions.forEach(function(q, index) { if (q && q.id) { %>
+                    <div class="card mt-4 question-card animated fadeInUp" data-question-id="<%= q.id %>">
+                        <div class="card-body">
+                            <h5 class="card-title fw-bold">Question <%= index + 1 %></h5>
+                            <p class="card-text fs-5"><%= q.question %></p>
+                            <div class="options">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="answer_<%= q.id %>" id="q<%= q.id %>_1"
+                                        value="1" required>
+                                    <label class="form-check-label" for="q<%= q.id %>_1"><%= q.option1 %></label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="answer_<%= q.id %>" id="q<%= q.id %>_2"
+                                        value="2" required>
+                                    <label class="form-check-label" for="q<%= q.id %>_2"><%= q.option2 %></label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="answer_<%= q.id %>" id="q<%= q.id %>_3"
+                                        value="3" required>
+                                    <label class="form-check-label" for="q<%= q.id %>_3"><%= q.option3 %></label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="answer_<%= q.id %>" id="q<%= q.id %>_4"
+                                        value="4" required>
+                                    <label class="form-check-label" for="q<%= q.id %>_4"><%= q.option4 %></label>
+                                </div>
+                            </div>
+                            <div class="invalid-feedback d-none">
+                                Please select an answer for this question.
+                            </div>
+                        </div>
+                    </div>
+                    <% } }); %>
+                    <% } else { %>
+                    <p class="text-center mt-5">No questions found for this section.</p>
+                    <% } %>
+
+                    <div class="text-center">
+                        <div id="formError" class="alert alert-danger mt-4 d-none animated fadeIn">
+                            Please answer all questions before submitting.
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-lg mt-4 w-100 animated glow">Submit Section</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/vendor/sweetalert2/sweetalert2.all.min.js"></script>
+
+    <script>
+        (function () {
+            'use strict';
+
+            const quizForm = document.getElementById('quizForm');
+            const timerDisplay = document.getElementById('timer');
+            let timeLeft = 720; // 12 minutes
+            let warningCount = 0;
+            let isSubmitting = false;
+
+            function startTimer() {
+                const updateTimer = () => {
+                    const minutes = Math.floor(timeLeft / 60);
+                    const seconds = timeLeft % 60;
+                    timerDisplay.innerHTML = `<i class="far fa-clock me-2"></i>Time Remaining: ${minutes}:${seconds.toString().padStart(2, '0')}`;
+                    if (timeLeft <= 0) {
+                        timerDisplay.textContent = 'Time Up!';
+                        if (!isSubmitting) {
+                            isSubmitting = true;
+                            Swal.fire({
+                                title: 'Time Up!',
+                                text: 'Your quiz time has ended. Submitting automatically.',
+                                icon: 'info',
+                                allowOutsideClick: false,
+                                confirmButtonText: 'OK'
+                            }).then(() => quizForm.submit());
+                        }
+                    } else {
+                        timeLeft--;
+                        setTimeout(updateTimer, 1000);
+                    }
+                };
+                updateTimer();
+            }
+
+            const STORAGE_KEY = 'exam_tab_switch_count_<%= typeof examSessionId !== "undefined" ? examSessionId : (student && student.roll_number ? student.roll_number : "noid") %>';
+            let globalWarningCount = parseInt(localStorage.getItem(STORAGE_KEY) || '0', 10) || 0;
+            console.log('Exam tab-switch global count (on load):', globalWarningCount);
+
+            function showTabWarning(count) {
+                console.log('showTabWarning called, count =', count);
+                const remaining = Math.max(0, 3 - count);
+                Swal.fire({
+                    title: count >= 3 ? 'Exam Submitted' : 'Warning!',
+                    text: count >= 3
+                        ? 'You have exceeded the maximum number of tab switches. Submitting exam.'
+                        : `You have switched tabs or windows (${count}/3). Remaining: ${remaining}`,
+                    icon: count >= 3 ? 'error' : 'warning',
+                    confirmButtonText: 'OK',
+                    allowOutsideClick: false
+                }).then(() => {
+                    if (count >= 3) {
+                        isSubmitting = true;
+                        document.getElementById('autoSubmit').value = 'true';
+                        quizForm.action = '/auto-submit';
+                        localStorage.setItem(STORAGE_KEY, String(count));
+                        quizForm.submit();
+                    }
+                });
+            }
+
+            let lastIncrementTime = 0;
+            const INCREMENT_DEBOUNCE_MS = 1500;
+            let prevVisibility = document.visibilityState;
+
+            document.addEventListener('visibilitychange', () => {
+                console.log('visibilitychange event: prevVisibility=', prevVisibility, 'current=', document.visibilityState, 'globalCount=', globalWarningCount);
+                const now = Date.now();
+                if (prevVisibility === 'visible' && document.hidden && !isSubmitting) {
+                    if (now - lastIncrementTime < INCREMENT_DEBOUNCE_MS) {
+                        console.debug('visibilitychange ignored (debounced)');
+                    } else {
+                        lastIncrementTime = now;
+                        globalWarningCount = (isNaN(globalWarningCount) ? 0 : globalWarningCount) + 1;
+                        console.log('Incremented globalWarningCount ->', globalWarningCount);
+                        localStorage.setItem(STORAGE_KEY, String(globalWarningCount));
+                        showTabWarning(globalWarningCount);
+                    }
+                }
+                prevVisibility = document.visibilityState;
+            });
+
+            quizForm.addEventListener('submit', function (event) {
+                if (isSubmitting) {
+                    event.preventDefault();
+                    return;
+                }
+                let isValid = true;
+                const questionCards = document.querySelectorAll('.question-card');
+                let unanswered = [];
+                questionCards.forEach((card, idx) => {
+                    const questionId = card.getAttribute('data-question-id');
+                    const inputs = card.querySelectorAll(`input[name="answer_${questionId}"]`);
+                    const isChecked = Array.from(inputs).some(input => input.checked);
+                    const invalidFeedback = card.querySelector('.invalid-feedback');
+                    if (!isChecked) {
+                        invalidFeedback.classList.remove('d-none');
+                        isValid = false;
+                        unanswered.push(idx + 1);
+                    } else {
+                        invalidFeedback.classList.add('d-none');
+                    }
+                });
+                const formError = document.getElementById('formError');
+                if (!isValid) {
+                    formError.classList.remove('d-none');
+                    if (unanswered.length > 0) {
+                        formError.textContent = 'Please answer all questions. Unanswered: ' + unanswered.join(', ');
+                    } else {
+                        formError.textContent = 'Please answer all questions before submitting.';
+                    }
+                    formError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    event.preventDefault();
+                    event.stopPropagation();
+                } else {
+                    formError.classList.add('d-none');
+                    isSubmitting = true;
+                    document.getElementById('answersHidden').value = JSON.stringify(Object.fromEntries(
+                        Array.from(document.querySelectorAll('.question-card')).map(card => {
+                            const questionId = card.getAttribute('data-question-id');
+                            const checkedInput = card.querySelector(`input[name="answer_${questionId}"]:checked`);
+                            return [questionId, checkedInput ? checkedInput.value : null];
+                        })
+                    ));
+                }
+                quizForm.classList.add('was-validated');
+            });
+
+            document.addEventListener('DOMContentLoaded', () => {
+                startTimer();
+            });
+
+        })();
+    </script>
+</body>
+
+</html>
