@@ -1,1 +1,1 @@
-To import the .sql file present in this repository, first open XAMPP MySQL in you system, create a new database called student_placement. Click the option IMPORT, next to the SQL option, and import this file.
+To import the .sql file present in this repository, first open XAMPP MySQL in your system, create a new database called student_placement. Click the option IMPORT, next to the SQL option, and import this file.
