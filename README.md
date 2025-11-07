@@ -1,1 +1,9 @@
 To import the .sql file present in this repository, first open XAMPP MySQL in your system, create a new database called student_placement. Click the option IMPORT, next to the SQL option, and import this file.
+
+
+Project description:
+The Student Placement Prediction and Recommendation System is a comprehensive web-based application designed to facilitate placement exams and deliver personalized recommendations for students based on their performance across multiple domains. This platform features an admin dashboard for controlling exam release and halt, viewing results, and managing the system, alongside a student portal where users can take timed exams covering aptitude, technical skills, verbal ability, programming knowledge, and general awareness. The application includes real-time 12-minute timers with tab-switching detection to prevent cheating, automatic submission upon time expiry or violations, and tier-based recommendations (Tier 1, 2, 3) to guide students toward suitable career paths. Built with a responsive design for mobile compatibility, it ensures a smooth user experience across devices.
+
+
+The database schema encompasses several key tables: students for storing user information, admins for administrative credentials, separate question banks for each exam section (aptitude_questions, technical_questions, verbal_questions, programming_questions, general_awareness_questions), results to track exam outcomes and recommendations, and exam_status to control exam availability. In terms of usage, administrators can log in at /admin/login to manage exam status and review results, while students access the system at /login to participate in exams when released and view their personalized results. This project serves educational purposes and provides a robust framework for assessing and guiding student placement opportunities.
+Use the "node server.js" command to run the project.
