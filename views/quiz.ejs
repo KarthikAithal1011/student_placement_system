@@ -89,6 +89,7 @@
             let timeLeft = 720; // 12 minutes
             let warningCount = 0;
             let isSubmitting = false;
+            let timerInterval;
 
             function startTimer() {
                 const updateTimer = () => {
@@ -97,6 +98,7 @@
                     timerDisplay.innerHTML = `<i class="far fa-clock me-2"></i>Time Remaining: ${minutes}:${seconds.toString().padStart(2, '0')}`;
                     if (timeLeft <= 0) {
                         timerDisplay.textContent = 'Time Up!';
+                        clearInterval(timerInterval);
                         if (!isSubmitting) {
                             isSubmitting = true;
                             Swal.fire({
@@ -109,10 +111,10 @@
                         }
                     } else {
                         timeLeft--;
-                        setTimeout(updateTimer, 1000);
                     }
                 };
                 updateTimer();
+                timerInterval = setInterval(updateTimer, 1000);
             }
 
             const STORAGE_KEY = 'exam_tab_switch_count_<%= typeof examSessionId !== "undefined" ? examSessionId : (student && student.roll_number ? student.roll_number : "noid") %>';
@@ -209,6 +211,28 @@
             });
 
             document.addEventListener('DOMContentLoaded', () => {
+                // Optimize performance by reducing DOM manipulations
+                const observerOptions = {
+                    root: null,
+                    rootMargin: '50px',
+                    threshold: 0.1
+                };
+
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            entry.target.style.willChange = 'auto';
+                        } else {
+                            entry.target.style.willChange = 'transform';
+                        }
+                    });
+                }, observerOptions);
+
+                // Observe question cards for performance optimization
+                document.querySelectorAll('.question-card').forEach(card => {
+                    observer.observe(card);
+                });
+
                 startTimer();
             });
 

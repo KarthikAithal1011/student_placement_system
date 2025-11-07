@@ -84,8 +84,9 @@ body {
     margin: var(--spacing-lg) auto;
 }
 
-.sections-card {
-    max-width: 1100px;
+.sections-card, .results-card, .quiz-card {
+    width: 100%;
+    max-width: none;
 }
 
 .results-card, .quiz-card {
@@ -506,6 +507,55 @@ body {
     border-color: var(--primary-color);
     box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
     outline: none;
+}
+
+/* Quiz Page Optimizations */
+.quiz-page {
+    overflow-x: hidden;
+}
+
+.question-card {
+    will-change: transform;
+    backface-visibility: hidden;
+    transform: translateZ(0);
+}
+
+.question-card .card-body {
+    will-change: auto;
+}
+
+/* Smooth scrolling and animations */
+html {
+    scroll-behavior: smooth;
+}
+
+.animated {
+    animation-fill-mode: both;
+    animation-duration: 0.6s;
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Reduce animation complexity for better performance */
+@media (prefers-reduced-motion: reduce) {
+    .animated {
+        animation: none !important;
+    }
+}
+
+/* Optimize form interactions */
+.form-check-input {
+    will-change: auto;
+}
+
+.form-check-label {
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+/* Timer optimization */
+.timer {
+    will-change: contents;
+    font-variant-numeric: tabular-nums;
 }
 
 /* Responsive Design */
