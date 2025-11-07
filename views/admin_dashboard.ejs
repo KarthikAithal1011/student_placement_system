@@ -37,6 +37,16 @@
                             </div>
                         </form>
                         <div class="text-center mt-4 button-container">
+                            <form action="/admin/release-exam" method="POST" class="d-inline">
+                                <button type="submit" class="btn btn-lg btn-exam-control btn-release-exam me-2" <%= isReleased ? 'disabled' : '' %>>
+                                    <i class="fas fa-play-circle me-1"></i>RELEASE EXAM
+                                </button>
+                            </form>
+                            <form action="/admin/halt-exam" method="POST" class="d-inline">
+                                <button type="submit" class="btn btn-lg btn-exam-control btn-halt-exam me-2" <%= !isReleased ? 'disabled' : '' %>>
+                                    <i class="fas fa-stop-circle me-1"></i>HALT EXAM
+                                </button>
+                            </form>
                             <a href="/admin/logout" class="btn btn-success btn-lg animated glow text-decoration-none">
                                 <i class="fas fa-sign-out-alt me-1"></i>Logout
                             </a>

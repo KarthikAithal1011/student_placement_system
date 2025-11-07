@@ -581,3 +581,79 @@ body {
 .button-container .btn {
     margin-bottom: 1rem;
 }
+
+/* Exam Control Buttons */
+.btn-exam-control {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+    background-size: 200% 200%;
+}
+
+.btn-exam-control:not(:disabled):hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.btn-exam-control:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background: #6c757d !important;
+    border-color: #6c757d !important;
+}
+
+.btn-exam-control:disabled:hover {
+    transform: none;
+    box-shadow: none;
+}
+
+/* Release Exam Button */
+.btn-release-exam {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    color: white;
+    border-color: #28a745;
+}
+
+.btn-release-exam:not(:disabled):hover {
+    background: linear-gradient(135deg, #218838 0%, #17a2b8 100%);
+    border-color: #1e7e34;
+    box-shadow: 0 8px 25px rgba(40, 167, 69, 0.3);
+}
+
+.btn-release-exam:disabled {
+    background: #6c757d;
+    border-color: #6c757d;
+}
+
+/* Halt Exam Button */
+.btn-halt-exam {
+    background: linear-gradient(135deg, #dc3545 0%, #fd7e14 100%);
+    color: white;
+    border-color: #dc3545;
+}
+
+.btn-halt-exam:not(:disabled):hover {
+    background: linear-gradient(135deg, #c82333 0%, #e8590c 100%);
+    border-color: #bd2130;
+    box-shadow: 0 8px 25px rgba(220, 53, 69, 0.3);
+}
+
+.btn-halt-exam:disabled {
+    background: #6c757d;
+    border-color: #6c757d;
+}
+
+/* Pulsing effect for active buttons */
+.btn-exam-control:not(:disabled) {
+    animation: gentle-pulse 3s infinite;
+}
+
+@keyframes gentle-pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.02);
+    }
+}

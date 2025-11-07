@@ -98,6 +98,28 @@ console.log('Starting server setup at', new Date().toLocaleString('en-IN', { tim
             throw err;
         }
     });
+
+    // Create exam_status table if it doesn't exist
+    connection.query(`
+        CREATE TABLE IF NOT EXISTS exam_status (
+            id INT PRIMARY KEY DEFAULT 1,
+            is_released BOOLEAN DEFAULT FALSE
+        )
+    `, (err) => {
+        if (err) {
+            console.error('Error creating exam_status table:', err.message, err.stack);
+        } else {
+            console.log('exam_status table ensured');
+            // Insert default row if not exists
+            connection.query(`
+                INSERT IGNORE INTO exam_status (id, is_released) VALUES (1, FALSE)
+            `, (err) => {
+                if (err) {
+                    console.error('Error inserting default exam_status:', err.message, err.stack);
+                }
+            });
+        }
+    });
     // Routes
     app.get('/', (req, res) => {
         try {
@@ -146,7 +168,15 @@ console.log('Starting server setup at', new Date().toLocaleString('en-IN', { tim
     if (!req.session.admin) {
         return res.redirect('/admin/login');
     }
-    res.render('admin_dashboard');
+    connection.query('SELECT is_released FROM exam_status WHERE id = 1', (err, results) => {
+        if (err) {
+            console.error('Error fetching exam status:', err.message, err.stack);
+            res.status(500).send('Server Error');
+            return;
+        }
+        const isReleased = results.length > 0 ? results[0].is_released : false;
+        res.render('admin_dashboard', { isReleased });
+    });
 });
 app.get('/admin/results', (req, res) => {
     if (!req.session.admin) {
@@ -163,6 +193,34 @@ app.get('/admin/results', (req, res) => {
         res.render('admin_student_results', { results: results, roll_number: roll_number });
     });
 });
+    app.post('/admin/release-exam', (req, res) => {
+        if (!req.session.admin) {
+            return res.redirect('/admin/login');
+        }
+        connection.query('UPDATE exam_status SET is_released = TRUE WHERE id = 1', (err) => {
+            if (err) {
+                console.error('Error releasing exam:', err.message, err.stack);
+                res.status(500).send('Server Error');
+                return;
+            }
+            res.redirect('/admin/dashboard');
+        });
+    });
+
+    app.post('/admin/halt-exam', (req, res) => {
+        if (!req.session.admin) {
+            return res.redirect('/admin/login');
+        }
+        connection.query('UPDATE exam_status SET is_released = FALSE WHERE id = 1', (err) => {
+            if (err) {
+                console.error('Error halting exam:', err.message, err.stack);
+                res.status(500).send('Server Error');
+                return;
+            }
+            res.redirect('/admin/dashboard');
+        });
+    });
+
     app.get('/admin/logout', (req, res) => {
         req.session.destroy(err => {
             if (err) {
@@ -271,44 +329,57 @@ app.get('/admin/results', (req, res) => {
                 console.log('Invalid name, redirecting to /');
                 return res.redirect('/');
             }
-            connection.query(
-                'SELECT 1 FROM student_placement.students WHERE roll_number = ?',
-                [roll_number],
-                (err, results) => {
-                    if (err) {
-                        console.error('Error checking student:', err.message, err.stack);
-                        res.status(500).send('Server Error: Failed to check student - ' + err.message);
-                        return;
-                    }
-                    if (results.length === 0) {
-                        connection.query(
-                            'INSERT INTO student_placement.students (roll_number, name) VALUES (?, ?)',
-                            [roll_number, name],
-                            (err) => {
-                                if (err) {
-                                    console.error('Error inserting new student:', err.message, err.stack);
-                                    res.status(500).send('Server Error: Failed to save new student - ' + err.message);
-                                    return;
-                                }
-                                console.log('New student', roll_number, 'inserted at', new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }));
-                                // Create a per-login exam session id so client-side stored
-                                // counters are scoped to this exam session and won't interfere
-                                // with previous attempts in the same browser.
-                                req.session.student = { roll_number, name };
-                                req.session.attemptedSections = {};
-                                req.session.examSessionId = String(Date.now());
-                                res.redirect('/sections');
-                            }
-                        );
-                    } else {
-                                req.session.student = { roll_number, name };
-                                req.session.attemptedSections = {}; // Reset for re-attempts
-                                req.session.results = {}; // Clear previous session results
-                                req.session.examSessionId = String(Date.now()); // New session ID for re-attempt
-                        res.redirect('/sections');
-                    }
+            // Check if exam is released
+            connection.query('SELECT is_released FROM exam_status WHERE id = 1', (err, statusResults) => {
+                if (err) {
+                    console.error('Error checking exam status:', err.message, err.stack);
+                    res.status(500).send('Server Error: Failed to check exam status - ' + err.message);
+                    return;
                 }
-            );
+                if (statusResults.length === 0 || !statusResults[0].is_released) {
+                    req.session.error = 'Exam is currently not available. Please wait for the admin to release the exam.';
+                    console.log('Exam not released, redirecting to /');
+                    return res.redirect('/');
+                }
+                connection.query(
+                    'SELECT 1 FROM student_placement.students WHERE roll_number = ?',
+                    [roll_number],
+                    (err, results) => {
+                        if (err) {
+                            console.error('Error checking student:', err.message, err.stack);
+                            res.status(500).send('Server Error: Failed to check student - ' + err.message);
+                            return;
+                        }
+                        if (results.length === 0) {
+                            connection.query(
+                                'INSERT INTO student_placement.students (roll_number, name) VALUES (?, ?)',
+                                [roll_number, name],
+                                (err) => {
+                                    if (err) {
+                                        console.error('Error inserting new student:', err.message, err.stack);
+                                        res.status(500).send('Server Error: Failed to save new student - ' + err.message);
+                                        return;
+                                    }
+                                    console.log('New student', roll_number, 'inserted at', new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }));
+                                    // Create a per-login exam session id so client-side stored
+                                    // counters are scoped to this exam session and won't interfere
+                                    // with previous attempts in the same browser.
+                                    req.session.student = { roll_number, name };
+                                    req.session.attemptedSections = {};
+                                    req.session.examSessionId = String(Date.now());
+                                    res.redirect('/sections');
+                                }
+                            );
+                        } else {
+                                    req.session.student = { roll_number, name };
+                                    req.session.attemptedSections = {}; // Reset for re-attempts
+                                    req.session.results = {}; // Clear previous session results
+                                    req.session.examSessionId = String(Date.now()); // New session ID for re-attempt
+                            res.redirect('/sections');
+                        }
+                    }
+                );
+            });
         } catch (err) {
             console.error('Error processing login:', err.message, err.stack);
             res.status(500).send('Server Error: ' + err.message);
